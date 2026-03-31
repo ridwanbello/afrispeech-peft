@@ -1,0 +1,25 @@
+# Core dependencies
+torch>=2.6.0
+torchaudio>=2.6.0
+transformers>=4.40.0
+datasets>=2.19.0
+accelerate>=0.30.0
+evaluate>=0.4.1
+jiwer>=3.0.3
+peft>=0.10.0
+soundfile
+librosa
+wandb
+huggingface_hub
+numpy<2.0
+
+# Analysis
+pandas
+matplotlib
+seaborn
+jupyterlab
+
+# Optional (for vocabulary analysis)
+spacy
+scispacy
+pyenchant
