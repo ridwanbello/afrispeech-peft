@@ -3,7 +3,6 @@
 This repository contains the code for the paper:
 
 > **Parameter-Efficient Fine-tuning of Speech Foundation Models for African-Accented English ASR**  
-> Ridwan Bello
 
 ## Overview
 
@@ -25,8 +24,7 @@ afrispeech-peft/
 │   ├── finetune_whisper_full_clinical.py         # Whisper full fine-tuning (clinical, Modal)
 │   ├── finetune_whisper_dora.py                  # Whisper DoRA fine-tuning (Modal H100)
 │   ├── finetune_wav2vec2_full.py                 # wav2vec2 full fine-tuning (local GPU)
-│   ├── finetune_wav2vec2_dora.py                 # wav2vec2 DoRA fine-tuning (local GPU)
-│   └── finetune_whisper_shared_regional_adapter.py  # Shared + regional adapter framework
+│   └── finetune_wav2vec2_dora.py                 # wav2vec2 DoRA fine-tuning (local GPU)
 │
 ├── evaluation/
 │   ├── evaluate_whisper_afrispeech.py            # Whisper eval on AfriSpeech (all splits/domains)
@@ -43,9 +41,7 @@ afrispeech-peft/
 │   └── preprocess_wav2vec2.py                    # Feature extraction for wav2vec2
 │
 └── analysis/
-    ├── transcript_analysis.py                    # Transcript length + domain word analysis
     ├── cleaning_pipeline_analysis.py             # Cleaning pipeline impact analysis
-    ├── vocabulary_analysis.py                    # OOV + African nouns + medical terms
     ├── plot_duration_histogram.py                # Audio duration distribution plot
     └── get_dataset_stats.py                      # Dataset statistics for paper
 ```
