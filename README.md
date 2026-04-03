@@ -1,50 +1,15 @@
 # AfriSpeech-PEFT: Parameter-Efficient Fine-tuning for African-Accented English ASR
 
-This repository contains the code for the paper:
-
-> **Parameter-Efficient Fine-tuning of Speech Foundation Models for African-Accented English ASR**  
-
 ## Overview
 
-We apply LoRA and DoRA (Weight-Decomposed Low-Rank Adaptation) to fine-tune
-Whisper-medium and wav2vec2-xlsr-53 on AfriSpeech-200 — a 200-hour pan-African
-accented English corpus covering general and clinical speech domains.
+We apply DoRA (Weight-Decomposed Low-Rank Adaptation) to fine-tune
+Whisper-medium and wav2vec2-xlsr-53 on AfriSpeech-200 (https://arxiv.org/abs/2310.00274) and compare with the conventional full-finetuning approach
 
 Key findings:
-- DoRA fine-tuning achieves competitive WER with full fine-tuning using <5% of parameters
-- DoRA generalises better cross-domain (general → clinical) than full fine-tuning
-- DoRA reduces catastrophic forgetting of standard English (LibriSpeech WER: 0.045 vs 0.057 for full fine-tuning)
-
-## Repository Structure
-
-```
-afrispeech-peft/
-├── training/
-│   ├── finetune_whisper_full_all_domains.py      # Whisper full fine-tuning (all domains, Modal)
-│   ├── finetune_whisper_full_clinical.py         # Whisper full fine-tuning (clinical, Modal)
-│   ├── finetune_whisper_dora.py                  # Whisper DoRA fine-tuning (Modal H100)
-│   ├── finetune_wav2vec2_full.py                 # wav2vec2 full fine-tuning (local GPU)
-│   └── finetune_wav2vec2_dora.py                 # wav2vec2 DoRA fine-tuning (local GPU)
-│
-├── evaluation/
-│   ├── evaluate_whisper_afrispeech.py            # Whisper eval on AfriSpeech (all splits/domains)
-│   ├── evaluate_wav2vec2_afrispeech.py           # wav2vec2 eval on AfriSpeech
-│   ├── evaluate_whisper_dora_afrispeech.py       # Whisper DoRA eval on AfriSpeech
-│   ├── evaluate_wav2vec2_dora_afrispeech.py      # wav2vec2 DoRA eval on AfriSpeech
-│   ├── evaluate_dora_librispeech.py              # Catastrophic forgetting eval (LibriSpeech)
-│   ├── evaluate_whisper_librispeech.py           # Whisper baseline eval on LibriSpeech
-│   ├── evaluate_wav2vec2_librispeech.py          # wav2vec2 baseline eval on LibriSpeech
-│   └── evaluate_mms_zeroshot.py                  # MMS zero-shot eval on AfriSpeech (Modal)
-│
-├── preprocessing/
-│   ├── preprocess_whisper.py                     # Feature extraction for Whisper
-│   └── preprocess_wav2vec2.py                    # Feature extraction for wav2vec2
-│
-└── analysis/
-    ├── cleaning_pipeline_analysis.py             # Cleaning pipeline impact analysis
-    ├── plot_duration_histogram.py                # Audio duration distribution plot
-    └── get_dataset_stats.py                      # Dataset statistics for paper
-```
+- Despite using only <5% of model parameters, Whisper finetuned with DoRA all-domain achieves 0.130 test WER vs 0.125 for full fine-tuning (100%)
+- DoRA reduces catastrophic forgetting by 61.7% on LibriSpeech (0.049 vs 0.128 for full fine-tuning)
+- DoRA generalises better cross-domain: general-trained DoRA achieves 0.246 on clinical test vs 0.266 for full fine-tuning
+- Full fine-tuning outperforms DoRA for wav2vec2-xlsr-53 on AfriSpeech, but DoRA still reduces forgetting (0.133 vs 0.158)
 
 ## Dataset
 
@@ -53,15 +18,20 @@ afrispeech-peft/
 120 accents from 13 countries, covering general and clinical domains.
 
 ## Models
+The finetuned models are hosted on HuggingFace
 
 | Model | HuggingFace Hub |
 |---|---|
-| Whisper-medium full fine-tuned (general) | `robello2/whisper-medium-afrispeech-general-v4` |
+| Whisper-medium full fine-tuned (general) | `robello2/whisper-medium-afrispeech-general` |
 | Whisper-medium full fine-tuned (clinical) | `robello2/whisper-medium-afrispeech-clinical` |
 | Whisper-medium full fine-tuned (all) | `robello2/whisper-medium-afrispeech-all` |
 | Whisper-medium DoRA (general) | `robello2/whisper-medium-dora-afrispeech-general` |
+| Whisper-medium DoRA (clinical) | `robello2/whisper-medium-dora-afrispeech-clinical` |
+| Whisper-medium DoRA (all) | `robello2/whisper-medium-dora-afrispeech-all` |
 | wav2vec2-xlsr-53 full fine-tuned (all) | `robello2/wav2vec2-xlsr-afrispeech-all` |
 | wav2vec2-xlsr-53 DoRA (general) | `robello2/wav2vec2-xlsr-dora-afrispeech-general` |
+| wav2vec2-xlsr-53 DoRA (clinical) | `robello2/wav2vec2-xlsr-dora-afrispeech-clinical` |
+| wav2vec2-xlsr-53 DoRA (all) | `robello2/wav2vec2-xlsr-dora-afrispeech-all` |
 
 ## Setup
 
@@ -79,7 +49,7 @@ modal token set --token-id YOUR_ID --token-secret YOUR_SECRET
 
 ## Training
 
-### Full fine-tuning (Modal H100)
+### Full fine-tuning
 ```bash
 # Whisper all-domain
 modal run training/finetune_whisper_full_all_domains.py
@@ -90,22 +60,19 @@ modal run training/finetune_whisper_full_all_domains.py --resume
 
 ### DoRA fine-tuning
 ```bash
-# Whisper DoRA (Modal H100)
+# Whisper DoRA — general / clinical / all (Modal H100)
+# Set DOMAIN at top of script: "general" | "clinical" | "all"
 modal run training/finetune_whisper_dora.py
-
-# wav2vec2 DoRA (local GPU)
-PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-python training/finetune_wav2vec2_dora.py --domain general
 ```
 
 ## Evaluation
 
 ```bash
-# AfriSpeech evaluation (all splits and domains)
+# AfriSpeech evaluation — all 3 DoRA models per architecture
 python evaluation/evaluate_whisper_dora_afrispeech.py
 python evaluation/evaluate_wav2vec2_dora_afrispeech.py
 
-# Catastrophic forgetting (LibriSpeech)
+# Catastrophic forgetting — all 6 DoRA models on LibriSpeech
 python evaluation/evaluate_dora_librispeech.py
 
 # MMS zero-shot (Modal)
@@ -122,29 +89,47 @@ python preprocessing/preprocess_whisper.py --domain all
 
 # wav2vec2
 python preprocessing/preprocess_wav2vec2.py --domain general
+python preprocessing/preprocess_wav2vec2.py --domain clinical
+python preprocessing/preprocess_wav2vec2.py --domain all
 ```
 
+## DoRA Hyperparameters
+ 
+| Hyperparameter | Whisper-medium | wav2vec2-xlsr-53 |
+|---|---|---|
+| Rank (r) | 32 | 32 |
+| Alpha (α) | 64 | 64 |
+| Dropout | 0.05 | 0.05 |
+| Target modules | q, k, v, out, fc1, fc2 | q, k, v, out |
+| Trainable params | <5% | <2% |
+| Learning rate | 1e-4 | 1e-4 |
+| Early stopping patience | 3 epochs | 3 epochs |
+ 
 ## Key Results
-
-| Model | Method | Trainable | LS-clean | Test Gen | Test Cli | Test All |
+ 
+### Whisper-medium
+ 
+| Training domain | Method | Trainable | LS-clean | Test Gen | Test Cli | Test All |
 |---|---|---|---|---|---|---|
-| Whisper-medium | Zero-shot | — | 0.027 | 0.278 | 0.341 | 0.310 |
-| Whisper-medium | Full FT | 100% | 0.057 | 0.093 | 0.266 | 0.181 |
-| Whisper-medium | DoRA r=32 | <5% | 0.045 | 0.101 | 0.246 | 0.174 |
-| wav2vec2-xlsr-53 | Zero-shot | — | 0.074 | 0.502 | 0.654 | 0.578 |
-| wav2vec2-xlsr-53 | Full FT | 100% | 0.138 | 0.198 | 0.424 | 0.310 |
-| wav2vec2-xlsr-53 | DoRA r=32 | <2% | 0.105 | 0.321 | 0.498 | 0.409 |
-
-## Citation
-
-```bibtex
-@article{bello2026afrispeech_peft,
-  title   = {Parameter-Efficient Fine-tuning of Speech Foundation Models for African-Accented English ASR},
-  author  = {Bello, Ridwan},
-  journal = {Computer Speech \& Language},
-  year    = {2026}
-}
-```
+| — | Zero-shot | — | 0.027 | 0.278 | 0.341 | 0.310 |
+| General | Full FT | 100% | 0.057 | 0.093 | 0.266 | 0.181 |
+| General | DoRA r=32 | <5% | 0.045 | 0.101 | 0.246 | 0.174 |
+| Clinical | Full FT | 100% | 0.098 | 0.190 | 0.150 | 0.170 |
+| Clinical | DoRA r=32 | <5% | 0.047 | 0.160 | 0.158 | 0.159 |
+| All | Full FT | 100% | 0.128 | **0.097** | **0.152** | **0.125** |
+| All | DoRA r=32 | <5% | **0.049** | 0.101 | 0.158 | 0.130 |
+ 
+### wav2vec2-xlsr-53
+ 
+| Training domain | Method | Trainable | LS-clean | Test Gen | Test Cli | Test All |
+|---|---|---|---|---|---|---|
+| — | Zero-shot | — | 0.074 | 0.502 | 0.654 | 0.578 |
+| General | Full FT | 100% | 0.138 | 0.198 | 0.424 | 0.310 |
+| General | DoRA r=32 | <2% | 0.105 | 0.321 | 0.498 | 0.409 |
+| Clinical | Full FT | 100% | 0.178 | 0.307 | 0.267 | 0.287 |
+| Clinical | DoRA r=32 | <2% | 0.135 | 0.364 | 0.434 | 0.399 |
+| All | Full FT | 100% | 0.158 | **0.196** | **0.257** | **0.226** |
+| All | DoRA r=32 | <2% | **0.133** | 0.316 | 0.424 | 0.370 |
 
 ## Acknowledgements
 
