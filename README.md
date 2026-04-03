@@ -111,7 +111,7 @@ python preprocessing/preprocess_wav2vec2.py --domain all
  
 | Training domain | Method | Trainable | LS-clean | Test Gen | Test Cli | Test All |
 |---|---|---|---|---|---|---|
-| — | Zero-shot | — | 0.027 | 0.278 | 0.341 | 0.310 |
+| Whisper-medium (DoRA) | Zero-shot | 0% | 0.027 | 0.278 | 0.341 | 0.310 |
 | General | Full FT | 100% | 0.057 | 0.093 | 0.266 | 0.181 |
 | General | DoRA r=32 | <5% | 0.045 | 0.101 | 0.246 | 0.174 |
 | Clinical | Full FT | 100% | 0.098 | 0.190 | 0.150 | 0.170 |
@@ -123,7 +123,7 @@ python preprocessing/preprocess_wav2vec2.py --domain all
  
 | Training domain | Method | Trainable | LS-clean | Test Gen | Test Cli | Test All |
 |---|---|---|---|---|---|---|
-| — | Zero-shot | — | 0.074 | 0.502 | 0.654 | 0.578 |
+| Wav2vec2 (DoRA) | Zero-shot | 0% | 0.074 | 0.502 | 0.654 | 0.578 |
 | General | Full FT | 100% | 0.138 | 0.198 | 0.424 | 0.310 |
 | General | DoRA r=32 | <2% | 0.105 | 0.321 | 0.498 | 0.409 |
 | Clinical | Full FT | 100% | 0.178 | 0.307 | 0.267 | 0.287 |
